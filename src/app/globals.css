@@ -1,0 +1,262 @@
+@import "tailwindcss";
+
+/* =========================================================
+   VARIÁVEIS GLOBAIS
+========================================================= */
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+
+  --card: #ffffff;
+  --border: #000000;
+
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+
+  --muted: #475569;
+
+  --radius: 6px;
+}
+
+/* =========================================================
+   RESET
+========================================================= */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* =========================================================
+   TIPOGRAFIA (WEB)
+========================================================= */
+h1,
+h2,
+h3 {
+  font-weight: 700;
+  color: #000;
+}
+
+p {
+  color: var(--muted);
+}
+
+/* =========================================================
+   LINKS
+========================================================= */
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* =========================================================
+   BOTÕES
+========================================================= */
+button,
+.btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  border: 1px solid #ccc;
+}
+
+/* =========================================================
+   FORMULÁRIOS
+========================================================= */
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 8px;
+  font-size: 13px;
+  border-radius: var(--radius);
+  border: 1px solid #999;
+}
+
+/* =========================================================
+   TABELAS (WEB)
+========================================================= */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card);
+}
+
+th,
+td {
+  border: 1px solid var(--border);
+  padding: 6px;
+  font-size: 13px;
+  vertical-align: top;
+}
+
+th {
+  background: #f0f0f0;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+.card {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+/* =========================================================
+   IMPRESSÃO — LETRAS GRANDES E LEGÍVEIS (A4)
+========================================================= */
+@media print {
+
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  html,
+  body {
+    width: 210mm;
+    margin: 0;
+    padding: 0;
+    background: white !important;
+    color: black !important;
+
+    /* 👇 BASE DA IMPRESSÃO */
+    font-size: 14pt !important;
+    line-height: 1.5 !important;
+  }
+
+  /* REMOVE ELEMENTOS DE TELA */
+  header,
+  nav,
+  footer,
+  button,
+  .btn,
+  .no-print,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* EVITA PÁGINA VAZIA */
+  * {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  /* TÍTULOS */
+  h1 {
+    font-size: 20pt !important;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  h2 {
+    font-size: 17pt !important;
+    margin-bottom: 8px;
+  }
+
+  h3 {
+    font-size: 15pt !important;
+    margin-bottom: 6px;
+  }
+
+  /* TABELAS — PRINCIPAL LEITURA */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 14pt !important; /* 👈 MUITO IMPORTANTE */
+  }
+
+  th {
+    font-size: 14pt !important;
+    padding: 10px !important;
+    border: 1px solid #000 !important;
+    background: #eaeaea !important;
+    text-align: center;
+  }
+
+  td {
+    font-size: 14pt !important;
+    padding: 10px !important;
+    border: 1px solid #000 !important;
+    line-height: 1.5 !important;
+    vertical-align: top;
+    word-break: break-word;
+  }
+
+  tr {
+    page-break-inside: avoid;
+  }
+
+  /* TEXTOS INTERNOS */
+  p,
+  span,
+  div,
+  small {
+    font-size: 14pt !important;
+    line-height: 1.5 !important;
+  }
+
+  /* REMOVE DECORAÇÕES */
+  .watermark,
+  .marca,
+  .marca-dagua,
+  .feriado {
+    display: none !important;
+  }
+}
+
+/* =========================================================
+   RESPONSIVO
+========================================================= */
+@media (max-width: 640px) {
+  body {
+    font-size: 13px;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+  }
+}
