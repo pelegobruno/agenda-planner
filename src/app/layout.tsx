@@ -1,5 +1,5 @@
-/* eslint-disable @next/next/no-img-element */
 import "./globals.css";
+import Image from "next/image";
 
 export default function RootLayout({
   children,
@@ -8,57 +8,73 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className="bg-gray-100 text-gray-900">
-
+      <body>
         {/* ================= CABEÇALHO ================= */}
         <header className="bg-white shadow-sm">
+          <div className="max-w-6xl mx-auto px-4 py-5">
 
-          {/* LOGOS + TÍTULO */}
-          <div className="max-w-7xl mx-auto px-6 py-4
-                          grid grid-cols-[90px_1fr_90px] items-center">
+            {/* GRID PARA CENTRALIZAÇÃO REAL */}
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center">
 
-            {/* LOGO ESQUERDA */}
-            <img
-              src="/logo-esquerda.png"
-              alt="Logo CERTA"
-              className="h-10 mx-auto"
-            />
+              {/* LOGO ESQUERDA */}
+              <div className="flex justify-start">
+                <Image
+                  src="/logo-esquerda.png"
+                  alt="Logo CERTA"
+                  width={120}
+                  height={44}
+                  priority
+                  className="object-contain"
+                />
+              </div>
 
-            {/* TÍTULO CENTRAL */}
-            <div className="text-center leading-tight">
-              <h1 className="text-2xl tracking-widest">
+              {/* TÍTULO CENTRAL */}
+              <div className="text-center">
+                <h1 className="text-2xl sm:text-3xl">
                 CERTA
-              </h1>
-              <p className="text-xs uppercase text-gray-500 mt-1">
-                Centro de Referência do Transtorno Autista
-              </p>
+                </h1>
+                <p className="text-xs text-gray-500 uppercase tracking-[0.3em] mt-1">
+                  Centro de Referência do Transtorno Autista
+                </p>
+              </div>
+
+              {/* LOGO DIREITA */}
+              <div className="flex justify-end">
+                <Image
+                  src="/logo-direita.png"
+                  alt="Sistema de Saúde Vila Nova"
+                  width={120}
+                  height={44}
+                  priority
+                  className="object-contain"
+                />
+              </div>
+
             </div>
 
-            {/* LOGO DIREITA */}
-            <img
-              src="/logo-direita.png"
-              alt="Sistema de Saúde Vila Nova"
-              className="h-10 mx-auto"
-            />
+            {/* MENU */}
+            <nav className="mt-6 flex justify-center gap-6 text-sm font-medium text-gray-700">
+              <a className="hover:text-blue-600" href="/agenda">
+                Agenda Geral
+              </a>
+              <a className="hover:text-blue-600" href="/chamada">
+                Chamada do Dia
+              </a>
+              <a className="hover:text-blue-600" href="/planner">
+                Planner Mensal
+              </a>
+              <a className="hover:text-blue-600" href="/treinamentos">
+                Treinamentos
+              </a>
+            </nav>
+
           </div>
-
-          {/* MENU */}
-          <nav className="mt-4">
-            <ul className="flex justify-center gap-6 text-sm font-medium">
-              <li><a href="/agenda">Agenda Geral</a></li>
-              <li><a href="/chamada">Chamada do Dia</a></li>
-              <li><a href="/planner">Planner Mensal</a></li>
-              <li><a href="/treinamentos">Treinamentos</a></li>
-            </ul>
-          </nav>
-
         </header>
 
         {/* ================= CONTEÚDO ================= */}
-        <main className="max-w-7xl mx-auto px-6 py-8">
+        <main className="max-w-6xl mx-auto px-4 py-10">
           {children}
         </main>
-
       </body>
     </html>
   );

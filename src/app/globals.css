@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 /* ===============================
-   FONTE LOCAL (SEGURA)
+   FONTE LOCAL
+   Arquivo em: public/fonts/agenda-certa.ttf
 ================================ */
 @font-face {
   font-family: "AgendaCerta";
@@ -15,13 +16,15 @@
    VARIÁVEIS GLOBAIS
 ================================ */
 :root {
-  --background: #f5f6f8;
+  --background: #f4f6f8;
   --foreground: #1f2937;
 
   --card: #ffffff;
   --border: #e5e7eb;
 
   --primary: #2563eb;
+  --primary-soft: #eff6ff;
+
   --muted: #6b7280;
 }
 
@@ -47,11 +50,16 @@ body {
 h1 {
   font-family: "AgendaCerta", ui-sans-serif, system-ui;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
 }
 
-h2,
+h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
 h3 {
+  font-size: 1.125rem;
   font-weight: 600;
 }
 
@@ -77,9 +85,25 @@ a:hover {
 input,
 select {
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 0.5rem;
   padding: 0.45rem 0.6rem;
   font-size: 0.875rem;
+}
+
+/* ===============================
+   CARDS
+================================ */
+.card {
+  background: var(--card);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 35px rgba(0, 0, 0, 0.08);
 }
 
 /* ===============================
@@ -101,5 +125,26 @@ select {
     font-size: 20pt !important;
     text-align: center;
     font-family: "AgendaCerta", Arial, sans-serif;
+  }
+
+  table {
+    font-size: 12pt;
+  }
+}
+
+
+
+/* ===============================
+   PLANNER – CENTRALIZAÇÃO
+================================ */
+.planner-day {
+  text-align: center;
+}
+
+@media print {
+  .planner-day {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
   }
 }

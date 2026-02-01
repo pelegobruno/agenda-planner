@@ -1,35 +1,38 @@
 export default function Home() {
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-semibold">
-        Painel inicial
-      </h2>
+    <section className="space-y-8">
+      {/* TÍTULO */}
+      <header className="text-center">
+        <h2>Painel inicial</h2>
+        <p className="text-sm mt-2">
+          Acesso rápido às principais áreas do sistema
+        </p>
+      </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <a
-          href="/agenda"
-          className="bg-white p-6 rounded shadow hover:shadow-md"
-        >
-          <h3 className="font-medium text-lg">
+      {/* CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+        <a href="/agenda" className="card">
+          <h3 className="flex items-center gap-2">
             📅 Agenda Geral
           </h3>
-          <p className="text-sm text-gray-600">
-            Ver atendimentos de todos os profissionais
+          <p className="text-sm mt-2">
+            Visualize todos os atendimentos organizados
+            por profissionais, datas e horários.
           </p>
         </a>
 
-        <a
-          href="/chamada"
-          className="bg-white p-6 rounded shadow hover:shadow-md"
-        >
-          <h3 className="font-medium text-lg">
+        <a href="/chamada" className="card">
+          <h3 className="flex items-center gap-2">
             📋 Lista de Chamada
           </h3>
-          <p className="text-sm text-gray-600">
-            Pacientes previstos para o dia
+          <p className="text-sm mt-2">
+            Confira os pacientes previstos para o dia
+            e registre a presença.
           </p>
         </a>
+
       </div>
-    </div>
+    </section>
   );
 }
