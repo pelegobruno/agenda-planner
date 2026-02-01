@@ -148,3 +148,80 @@ select {
     justify-content: center !important;
   }
 }
+
+
+
+@import "tailwindcss";
+
+/* ===============================
+   FONTE LOCAL
+================================ */
+@font-face {
+  font-family: "AgendaCerta";
+  src: url("/fonts/agenda-certa.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ===============================
+   VARIÁVEIS
+================================ */
+:root {
+  --background: #f5f6f8;
+  --foreground: #1f2937;
+  --card: #ffffff;
+  --border: #e5e7eb;
+  --primary: #2563eb;
+  --muted: #6b7280;
+}
+
+/* ===============================
+   BASE
+================================ */
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, Arial;
+}
+
+/* ===============================
+   TIPOGRAFIA
+================================ */
+h1 {
+  font-family: "AgendaCerta", ui-sans-serif, system-ui;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+h2,
+h3 {
+  font-weight: 600;
+}
+
+p {
+  color: var(--muted);
+}
+
+/* ===============================
+   IMPRESSÃO
+================================ */
+@media print {
+  header,
+  nav,
+  button {
+    display: none !important;
+  }
+
+  h1 {
+    font-family: "AgendaCerta", Arial, sans-serif;
+    font-size: 20pt !important;
+  }
+}
