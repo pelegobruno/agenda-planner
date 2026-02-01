@@ -223,7 +223,7 @@ export default function Planner() {
 
         <div className="text-center">
           <h1 className="font-bold uppercase text-sm">
-            Planner Mensal de Atendimentos
+            Planner Mensal
           </h1>
           <p className="text-xs">
             <strong>Nome:</strong> {paciente}
