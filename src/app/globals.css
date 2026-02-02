@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
-/* ===============================
+/* ======================================================
    FONTE LOCAL
-   Arquivo em: public/fonts/agenda-certa.ttf
-================================ */
+   Arquivo: public/fonts/agenda-certa.ttf
+====================================================== */
 @font-face {
   font-family: "AgendaCerta";
   src: url("/fonts/agenda-certa.ttf") format("truetype");
@@ -12,9 +12,9 @@
   font-display: swap;
 }
 
-/* ===============================
+/* ======================================================
    VARIÁVEIS GLOBAIS
-================================ */
+====================================================== */
 :root {
   --background: #f4f6f8;
   --foreground: #1f2937;
@@ -28,9 +28,9 @@
   --muted: #6b7280;
 }
 
-/* ===============================
+/* ======================================================
    BASE
-================================ */
+====================================================== */
 html,
 body {
   height: 100%;
@@ -44,13 +44,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ===============================
+/* ======================================================
    TIPOGRAFIA
-================================ */
+====================================================== */
 h1 {
   font-family: "AgendaCerta", ui-sans-serif, system-ui;
   font-weight: 700;
   letter-spacing: 0.1em;
+  text-align: center;
 }
 
 h2 {
@@ -67,9 +68,9 @@ p {
   color: var(--muted);
 }
 
-/* ===============================
+/* ======================================================
    LINKS
-================================ */
+====================================================== */
 a {
   color: var(--primary);
   text-decoration: none;
@@ -79,9 +80,9 @@ a:hover {
   text-decoration: underline;
 }
 
-/* ===============================
+/* ======================================================
    INPUTS
-================================ */
+====================================================== */
 input,
 select {
   border: 1px solid var(--border);
@@ -90,9 +91,9 @@ select {
   font-size: 0.875rem;
 }
 
-/* ===============================
-   CARDS
-================================ */
+/* ======================================================
+   CARDS (Home, Painel)
+====================================================== */
 .card {
   background: var(--card);
   border-radius: 0.75rem;
@@ -106,9 +107,16 @@ select {
   box-shadow: 0 16px 35px rgba(0, 0, 0, 0.08);
 }
 
-/* ===============================
-   IMPRESSÃO
-================================ */
+/* ======================================================
+   PLANNER – CENTRALIZAÇÃO DOS DIAS
+====================================================== */
+.planner-day {
+  text-align: center;
+}
+
+/* ======================================================
+   IMPRESSÃO (A4 – LIMPA E LEGÍVEL)
+====================================================== */
 @media print {
   header,
   nav,
@@ -122,106 +130,20 @@ select {
   }
 
   h1 {
+    font-family: "AgendaCerta", Arial, sans-serif;
     font-size: 20pt !important;
     text-align: center;
-    font-family: "AgendaCerta", Arial, sans-serif;
+    letter-spacing: 0.12em;
   }
 
   table {
     font-size: 12pt;
   }
-}
 
-
-
-/* ===============================
-   PLANNER – CENTRALIZAÇÃO
-================================ */
-.planner-day {
-  text-align: center;
-}
-
-@media print {
   .planner-day {
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
-  }
-}
-
-
-
-@import "tailwindcss";
-
-/* ===============================
-   FONTE LOCAL
-================================ */
-@font-face {
-  font-family: "AgendaCerta";
-  src: url("/fonts/agenda-certa.ttf") format("truetype");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* ===============================
-   VARIÁVEIS
-================================ */
-:root {
-  --background: #f5f6f8;
-  --foreground: #1f2937;
-  --card: #ffffff;
-  --border: #e5e7eb;
-  --primary: #2563eb;
-  --muted: #6b7280;
-}
-
-/* ===============================
-   BASE
-================================ */
-html,
-body {
-  height: 100%;
-}
-
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: ui-sans-serif, system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, Arial;
-}
-
-/* ===============================
-   TIPOGRAFIA
-================================ */
-h1 {
-  font-family: "AgendaCerta", ui-sans-serif, system-ui;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-align: center;
-}
-
-h2,
-h3 {
-  font-weight: 600;
-}
-
-p {
-  color: var(--muted);
-}
-
-/* ===============================
-   IMPRESSÃO
-================================ */
-@media print {
-  header,
-  nav,
-  button {
-    display: none !important;
-  }
-
-  h1 {
-    font-family: "AgendaCerta", Arial, sans-serif;
-    font-size: 20pt !important;
+    align-items: center !important;
   }
 }
