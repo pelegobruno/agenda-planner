@@ -62,30 +62,37 @@ function mesExtenso(mesISO: string) {
 }
 
 /* =========================
-   CALENDÁRIO (5 SEMANAS)
+   LÓGICA DO CALENDÁRIO (AJUSTADA)
 ========================= */
 function gerarCalendario(mes: string): DiaPlanner[][] {
   const [ano, mesNum] = mes.split("-").map(Number);
-  const primeiro = new Date(ano, mesNum - 1, 1);
-  const ultimo = new Date(ano, mesNum, 0);
+  
+  // Pega o dia 1 do mês selecionado
+  const cursor = new Date(ano, mesNum - 1, 1);
 
-  const inicio = new Date(primeiro);
-  const ajuste = inicio.getDay() === 0 ? -6 : 1 - inicio.getDay();
-  inicio.setDate(inicio.getDate() + ajuste);
+  // Avança até a primeira SEGUNDA-FEIRA do mês (getDay === 1)
+  while (cursor.getDay() !== 1) {
+    cursor.setDate(cursor.getDate() + 1);
+  }
 
   const semanas: DiaPlanner[][] = [];
-  const cursor = new Date(inicio);
 
-  while (cursor <= ultimo && semanas.length < 5) {
+  // Gera exatamente 5 semanas
+  for (let s = 0; s < 5; s++) {
     const semana: DiaPlanner[] = [];
-    for (let i = 0; i < 5; i++) {
+    
+    // Gera de Segunda a Sexta (5 dias)
+    for (let d = 0; d < 5; d++) {
       semana.push({
         dataISO: cursor.toISOString().slice(0, 10),
         atendimentos: [],
       });
       cursor.setDate(cursor.getDate() + 1);
     }
+    
     semanas.push(semana);
+    
+    // Pula Sábado e Domingo para começar na próxima segunda
     cursor.setDate(cursor.getDate() + 2);
   }
 
@@ -102,7 +109,7 @@ export default function Planner() {
   const [treinamentos, setTreinamentos] = useState<Treinamento[]>([]);
   const [loading, setLoading] = useState(true);
 
-  /* AGENDA */
+  /* AGENDA (API) */
   useEffect(() => {
     setLoading(true);
     fetch("/api/agendamentos")
@@ -112,7 +119,7 @@ export default function Planner() {
       .finally(() => setLoading(false));
   }, []);
 
-  /* TREINAMENTOS */
+  /* TREINAMENTOS (LocalStorage Sincronizado) */
   useEffect(() => {
     setTreinamentos(getTreinamentos());
 
@@ -124,7 +131,7 @@ export default function Planner() {
     return () => window.removeEventListener("storage", atualizar);
   }, []);
 
-  /* PACIENTES */
+  /* PACIENTES ÚNICOS */
   const pacientesUnicos = useMemo(() => {
     const nomes = agendamentos
       .filter((a) => pertenceAoMes(a.data, mes))
@@ -138,7 +145,7 @@ export default function Planner() {
     return Array.from(new Set(nomes)).sort();
   }, [agendamentos, mes]);
 
-  /* CALENDÁRIO */
+  /* MONTAGEM DO CALENDÁRIO */
   const calendario = useMemo(() => {
     const cal = gerarCalendario(mes);
 
@@ -164,15 +171,12 @@ export default function Planner() {
     return cal;
   }, [mes, paciente, agendamentos, treinamentos]);
 
-  /* LOADING */
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[70vh]">
         <div className="text-center space-y-3">
           <div className="animate-spin h-10 w-10 border-4 border-gray-300 border-t-gray-700 rounded-full mx-auto" />
-          <p className="text-sm text-gray-600">
-            Carregando agenda mensal…
-          </p>
+          <p className="text-sm text-gray-600">Carregando agenda mensal…</p>
         </div>
       </div>
     );
@@ -180,7 +184,7 @@ export default function Planner() {
 
   return (
     <div className="planner-print p-6 space-y-4">
-      {/* TOPO */}
+      {/* TOPO CONTROLES */}
       <div className="flex justify-between items-center print:hidden">
         <h2 className="text-xl font-bold uppercase">
           Planner Mensal de Atendimentos
@@ -188,7 +192,7 @@ export default function Planner() {
 
         <button
           onClick={() => window.print()}
-          className="px-4 py-2 bg-blue-600 text-white rounded"
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
         >
           Imprimir / PDF
         </button>
@@ -210,9 +214,7 @@ export default function Planner() {
         >
           <option value="">Selecione um paciente</option>
           {pacientesUnicos.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
+            <option key={p} value={p}>{p}</option>
           ))}
         </select>
       </div>
@@ -222,27 +224,18 @@ export default function Planner() {
         <img src="/logo-esquerda.png" alt="Logo esquerda" style={{ height: 60 }} />
 
         <div className="text-center">
-          <h1 className="font-bold uppercase text-sm">
-            Planner Mensal
-          </h1>
-          <p className="text-xs">
-            <strong>Nome:</strong> {paciente}
-          </p>
-          <p className="text-xs">
-            <strong>Mês:</strong> {mesExtenso(mes)}
-          </p>
+          <h1 className="font-bold uppercase text-sm">Planner Mensal</h1>
+          <p className="text-xs"><strong>Nome:</strong> {paciente}</p>
+          <p className="text-xs"><strong>Mês:</strong> {mesExtenso(mes)}</p>
         </div>
 
         <img src="/logo-direita.png" alt="Logo direita" style={{ height: 60 }} />
       </div>
 
-      {/* GRADE */}
+      {/* GRADE DO PLANNER */}
       <div className="grid grid-cols-5 border border-black text-[10px]">
         {["Seg", "Ter", "Qua", "Qui", "Sex"].map((d) => (
-          <div
-            key={d}
-            className="p-1 font-bold text-center bg-gray-100 border border-black"
-          >
+          <div key={d} className="p-1 font-bold text-center bg-gray-100 border border-black uppercase">
             {d}
           </div>
         ))}
@@ -263,7 +256,7 @@ export default function Planner() {
 
               {bloqueado && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="rotate-[-30deg] text-gray-600 font-extrabold text-[18px] opacity-40">
+                  <div className="rotate-[-30deg] text-gray-600 font-extrabold text-[18px] opacity-40 text-center px-2">
                     {dia.treinamento?.titulo}
                   </div>
                 </div>
@@ -281,7 +274,7 @@ export default function Planner() {
         })}
       </div>
 
-      {/* RODAPÉ IMPRESSÃO — SEM LINHA */}
+      {/* RODAPÉ IMPRESSÃO */}
       <div className="hidden print:block text-[10px] mt-6 pt-2">
         <p><strong>Telefone:</strong> 3289-8213</p>
         <p><strong>WhatsApp Administrativo:</strong> (51) 99194-1007 – Agendamentos, receitas e laudos</p>

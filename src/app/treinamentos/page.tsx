@@ -1,13 +1,15 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Treinamento,
-  getTreinamentos,
-  salvarTreinamentos,
-} from "@/lib/treinamentosStorage";
 import { formatarDataBR } from "@/lib/datas";
+
+// Definição do tipo para evitar erros de TS
+type Treinamento = {
+  id: string;
+  data: string;
+  titulo: string;
+  descricao?: string;
+};
 
 export default function TreinamentosPage() {
   const [mounted, setMounted] = useState(false);
@@ -19,19 +21,33 @@ export default function TreinamentosPage() {
 
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [mensagem, setMensagem] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   /* =========================
-     LOAD INICIAL
+       CARREGAR DADOS (GLOBAL)
   ========================= */
+  async function carregarDados() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/treinamentos");
+      const dados = await res.json();
+      setLista(Array.isArray(dados) ? dados : []);
+    } catch (err) {
+      console.error("Erro ao carregar treinamentos globais:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     setMounted(true);
-    setLista(getTreinamentos());
+    carregarDados();
   }, []);
 
   if (!mounted) return null;
 
   /* =========================
-     RESET FORM
+       RESET FORM
   ========================= */
   function limparFormulario() {
     setData("");
@@ -41,53 +57,58 @@ export default function TreinamentosPage() {
   }
 
   /* =========================
-     SALVAR / EDITAR
+       SALVAR / EDITAR (GLOBAL)
   ========================= */
-  function salvar() {
+  async function salvar() {
     if (!data || !titulo) {
       setMensagem("⚠️ Preencha data e título.");
       return;
     }
 
-    let atualizada: Treinamento[];
+    const novoTreinamento: Treinamento = {
+      id: editandoId || crypto.randomUUID(),
+      data,
+      titulo: titulo.toUpperCase(),
+      descricao,
+    };
 
-    if (editandoId) {
-      // ✏️ EDITAR
-      atualizada = lista.map((t) =>
-        t.id === editandoId
-          ? {
-              ...t,
-              data,
-              titulo: titulo.toUpperCase(),
-              descricao,
-            }
-          : t
-      );
-      setMensagem("✏️ Treinamento atualizado com sucesso.");
-    } else {
-      // ➕ NOVO
-      const novo: Treinamento = {
-        id: crypto.randomUUID(),
-        data,
-        titulo: titulo.toUpperCase(),
-        descricao,
-      };
-      atualizada = [...lista, novo];
-      setMensagem("✅ Treinamento salvo com sucesso.");
+    try {
+      const res = await fetch("/api/treinamentos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(novoTreinamento),
+      });
+
+      if (res.ok) {
+        setMensagem(editandoId ? "✏️ Treinamento atualizado globalmente." : "✅ Treinamento salvo globalmente.");
+        carregarDados(); // Recarrega a lista do servidor
+        limparFormulario();
+      } else {
+        setMensagem("❌ Erro ao salvar no servidor.");
+      }
+    } catch (error) {
+      console.error("Erro ao salvar:", error); // Usando a variável para evitar erro de ESLint
+      setMensagem("❌ Falha na conexão com o servidor.");
     }
-
-    setLista(atualizada);
-    salvarTreinamentos(atualizada);
-
-    // 🔔 avisa Planner
-    window.dispatchEvent(new Event("storage"));
-
-    limparFormulario();
   }
 
   /* =========================
-     EDITAR CLICK
+       REMOVER (GLOBAL)
   ========================= */
+  async function remover(id: string) {
+    if (!confirm("Deseja remover este treinamento globalmente?")) return;
+
+    try {
+      const res = await fetch(`/api/treinamentos?id=${id}`, { method: "DELETE" });
+      if (res.ok) {
+        carregarDados();
+      }
+    } catch (error) {
+      console.error("Erro ao remover:", error); // Usando a variável para evitar erro de ESLint
+      alert("Erro ao remover do servidor.");
+    }
+  }
+
   function editar(t: Treinamento) {
     setEditandoId(t.id);
     setData(t.data);
@@ -96,22 +117,10 @@ export default function TreinamentosPage() {
     setMensagem(null);
   }
 
-  /* =========================
-     REMOVER
-  ========================= */
-  function remover(id: string) {
-    if (!confirm("Deseja remover este treinamento?")) return;
-
-    const atualizada = lista.filter((t) => t.id !== id);
-    setLista(atualizada);
-    salvarTreinamentos(atualizada);
-    window.dispatchEvent(new Event("storage"));
-  }
-
   return (
     <div className="space-y-6 max-w-4xl">
       <h2 className="text-2xl font-semibold">
-        Cadastro de Treinamentos
+        Cadastro de Treinamentos (Sincronização Global)
       </h2>
 
       {mensagem && (
@@ -133,9 +142,7 @@ export default function TreinamentosPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium">
-            Título
-          </label>
+          <label className="block text-sm font-medium">Título</label>
           <input
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
@@ -144,9 +151,7 @@ export default function TreinamentosPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium">
-            Descrição
-          </label>
+          <label className="block text-sm font-medium">Descrição</label>
           <textarea
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
@@ -157,7 +162,7 @@ export default function TreinamentosPage() {
         <div className="flex gap-2">
           <button
             onClick={salvar}
-            className="px-4 py-2 bg-blue-600 text-white rounded"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             {editandoId ? "Salvar alterações" : "Salvar treinamento"}
           </button>
@@ -184,32 +189,36 @@ export default function TreinamentosPage() {
           </tr>
         </thead>
         <tbody>
-          {lista.map((t) => (
-            <tr key={t.id} className="border-t">
-              <td className="p-2">{formatarDataBR(t.data)}</td>
-              <td className="p-2 font-medium">{t.titulo}</td>
-              <td className="p-2">{t.descricao}</td>
-              <td className="p-2 text-center space-x-2">
-                <button
-                  onClick={() => editar(t)}
-                  className="text-blue-600 font-semibold"
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => remover(t.id)}
-                  className="text-red-600 font-semibold"
-                >
-                  Excluir
-                </button>
-              </td>
-            </tr>
-          ))}
+          {loading ? (
+            <tr><td colSpan={4} className="p-4 text-center">Sincronizando com o servidor...</td></tr>
+          ) : (
+            lista.map((t) => (
+              <tr key={t.id} className="border-t">
+                <td className="p-2">{formatarDataBR(t.data)}</td>
+                <td className="p-2 font-medium">{t.titulo}</td>
+                <td className="p-2">{t.descricao}</td>
+                <td className="p-2 text-center space-x-2">
+                  <button
+                    onClick={() => editar(t)}
+                    className="text-blue-600 font-semibold hover:underline"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => remover(t.id)}
+                    className="text-red-600 font-semibold hover:underline"
+                  >
+                    Excluir
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
 
-          {lista.length === 0 && (
+          {!loading && lista.length === 0 && (
             <tr>
               <td colSpan={4} className="p-4 text-center text-gray-500">
-                Nenhum treinamento cadastrado
+                Nenhum treinamento cadastrado no servidor.
               </td>
             </tr>
           )}
