@@ -3,10 +3,9 @@
 import { useEffect, useState } from "react";
 import { formatarDataBR } from "@/lib/datas";
 
-// Definição do tipo para evitar erros de TS
 type Treinamento = {
   id: string;
-  data: string;
+  data: string;      // ISO yyyy-mm-dd
   titulo: string;
   descricao?: string;
 };
@@ -23,17 +22,23 @@ export default function TreinamentosPage() {
   const [mensagem, setMensagem] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Faz o Planner recarregar os treinamentos imediatamente (mesma aba)
+  function notificarPlanner() {
+    window.dispatchEvent(new Event("treinamentos_atualizados"));
+  }
+
   /* =========================
        CARREGAR DADOS (GLOBAL)
   ========================= */
   async function carregarDados() {
     setLoading(true);
     try {
-      const res = await fetch("/api/treinamentos");
+      const res = await fetch("/api/treinamentos", { cache: "no-store" });
       const dados = await res.json();
       setLista(Array.isArray(dados) ? dados : []);
     } catch (err) {
       console.error("Erro ao carregar treinamentos globais:", err);
+      setLista([]);
     } finally {
       setLoading(false);
     }
@@ -80,14 +85,19 @@ export default function TreinamentosPage() {
       });
 
       if (res.ok) {
-        setMensagem(editandoId ? "✏️ Treinamento atualizado globalmente." : "✅ Treinamento salvo globalmente.");
-        carregarDados(); // Recarrega a lista do servidor
+        setMensagem(
+          editandoId
+            ? "✏️ Treinamento atualizado globalmente."
+            : "✅ Treinamento salvo globalmente."
+        );
+        await carregarDados();
+        notificarPlanner();
         limparFormulario();
       } else {
         setMensagem("❌ Erro ao salvar no servidor.");
       }
     } catch (error) {
-      console.error("Erro ao salvar:", error); // Usando a variável para evitar erro de ESLint
+      console.error("Erro ao salvar:", error);
       setMensagem("❌ Falha na conexão com o servidor.");
     }
   }
@@ -101,10 +111,11 @@ export default function TreinamentosPage() {
     try {
       const res = await fetch(`/api/treinamentos?id=${id}`, { method: "DELETE" });
       if (res.ok) {
-        carregarDados();
+        await carregarDados();
+        notificarPlanner();
       }
     } catch (error) {
-      console.error("Erro ao remover:", error); // Usando a variável para evitar erro de ESLint
+      console.error("Erro ao remover:", error);
       alert("Erro ao remover do servidor.");
     }
   }
@@ -190,7 +201,11 @@ export default function TreinamentosPage() {
         </thead>
         <tbody>
           {loading ? (
-            <tr><td colSpan={4} className="p-4 text-center">Sincronizando com o servidor...</td></tr>
+            <tr>
+              <td colSpan={4} className="p-4 text-center">
+                Sincronizando com o servidor...
+              </td>
+            </tr>
           ) : (
             lista.map((t) => (
               <tr key={t.id} className="border-t">

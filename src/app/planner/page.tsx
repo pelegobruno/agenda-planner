@@ -1,21 +1,34 @@
 "use client";
 
-/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @next/next/no-img-element */
-
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { formatarDataBR } from "@/lib/datas";
-import { getTreinamentos, Treinamento } from "@/lib/treinamentosStorage";
+
+/* =========================
+   EVENTO GLOBAL (TS)
+========================= */
+declare global {
+  interface WindowEventMap {
+    treinamentos_atualizados: Event;
+  }
+}
 
 /* =========================
    TIPOS
 ========================= */
 type Agendamento = {
-  data: string;
+  data: string; // dd/mm/aaaa
   hora: string;
   profissao: string;
   profissional: string;
   paciente: string;
+};
+
+type Treinamento = {
+  id: string;
+  data: string; // yyyy-mm-dd
+  titulo: string;
+  descricao?: string;
 };
 
 type DiaPlanner = {
@@ -55,33 +68,27 @@ function pertenceAoMes(dataBR: string, mesISO: string) {
 function mesExtenso(mesISO: string) {
   const [ano, mes] = mesISO.split("-");
   const nomes = [
-    "janeiro","fevereiro","março","abril","maio","junho",
-    "julho","agosto","setembro","outubro","novembro","dezembro",
+    "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
   ];
   return `${nomes[Number(mes) - 1]} / ${ano}`;
 }
 
 /* =========================
-   LÓGICA DO CALENDÁRIO (AJUSTADA)
+   LÓGICA DO CALENDÁRIO
 ========================= */
 function gerarCalendario(mes: string): DiaPlanner[][] {
   const [ano, mesNum] = mes.split("-").map(Number);
-  
-  // Pega o dia 1 do mês selecionado
   const cursor = new Date(ano, mesNum - 1, 1);
 
-  // Avança até a primeira SEGUNDA-FEIRA do mês (getDay === 1)
+  // Busca a primeira segunda-feira
   while (cursor.getDay() !== 1) {
     cursor.setDate(cursor.getDate() + 1);
   }
 
   const semanas: DiaPlanner[][] = [];
-
-  // Gera exatamente 5 semanas
   for (let s = 0; s < 5; s++) {
     const semana: DiaPlanner[] = [];
-    
-    // Gera de Segunda a Sexta (5 dias)
     for (let d = 0; d < 5; d++) {
       semana.push({
         dataISO: cursor.toISOString().slice(0, 10),
@@ -89,18 +96,14 @@ function gerarCalendario(mes: string): DiaPlanner[][] {
       });
       cursor.setDate(cursor.getDate() + 1);
     }
-    
     semanas.push(semana);
-    
-    // Pula Sábado e Domingo para começar na próxima segunda
-    cursor.setDate(cursor.getDate() + 2);
+    cursor.setDate(cursor.getDate() + 2); // pula fim de semana
   }
-
   return semanas;
 }
 
 /* =========================
-   COMPONENTE
+   COMPONENTE PRINCIPAL
 ========================= */
 export default function Planner() {
   const [mes, setMes] = useState("2026-02");
@@ -109,29 +112,48 @@ export default function Planner() {
   const [treinamentos, setTreinamentos] = useState<Treinamento[]>([]);
   const [loading, setLoading] = useState(true);
 
-  /* AGENDA (API) */
-  useEffect(() => {
-    setLoading(true);
-    fetch("/api/agendamentos")
-      .then((r) => r.json())
-      .then((d) => setAgendamentos(Array.isArray(d) ? d : []))
-      .catch(() => setAgendamentos([]))
-      .finally(() => setLoading(false));
+  const carregarTreinamentos = useCallback(async () => {
+    try {
+      const res = await fetch("/api/treinamentos", { cache: "no-store" });
+      const dados = await res.json();
+      setTreinamentos(Array.isArray(dados) ? dados : []);
+    } catch {
+      setTreinamentos([]);
+    }
   }, []);
 
-  /* TREINAMENTOS (LocalStorage Sincronizado) */
   useEffect(() => {
-    setTreinamentos(getTreinamentos());
-
-    const atualizar = () => {
-      setTreinamentos(getTreinamentos());
+    let alive = true;
+    const run = async () => {
+      setLoading(true);
+      try {
+        const r = await fetch("/api/agendamentos");
+        const d = await r.json();
+        if (alive) setAgendamentos(Array.isArray(d) ? d : []);
+      } catch {
+        if (alive) setAgendamentos([]);
+      } finally {
+        if (alive) setLoading(false);
+      }
     };
-
-    window.addEventListener("storage", atualizar);
-    return () => window.removeEventListener("storage", atualizar);
+    run();
+    return () => { alive = false; };
   }, []);
 
-  /* PACIENTES ÚNICOS */
+  useEffect(() => {
+    carregarTreinamentos();
+    const onFocus = () => carregarTreinamentos();
+    const onTreinosAtualizados = () => carregarTreinamentos();
+
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("treinamentos_atualizados", onTreinosAtualizados);
+
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("treinamentos_atualizados", onTreinosAtualizados);
+    };
+  }, [carregarTreinamentos]);
+
   const pacientesUnicos = useMemo(() => {
     const nomes = agendamentos
       .filter((a) => pertenceAoMes(a.data, mes))
@@ -141,14 +163,11 @@ export default function Planner() {
           .map((n) => limparNome(n))
           .filter((n) => n && !contemReuniao(n))
       );
-
     return Array.from(new Set(nomes)).sort();
   }, [agendamentos, mes]);
 
-  /* MONTAGEM DO CALENDÁRIO */
   const calendario = useMemo(() => {
     const cal = gerarCalendario(mes);
-
     cal.forEach((semana) =>
       semana.forEach((dia) => {
         const dataBR = isoParaBR(dia.dataISO);
@@ -167,7 +186,6 @@ export default function Planner() {
           .sort((a, b) => a.hora.localeCompare(b.hora));
       })
     );
-
     return cal;
   }, [mes, paciente, agendamentos, treinamentos]);
 
@@ -184,12 +202,8 @@ export default function Planner() {
 
   return (
     <div className="planner-print p-6 space-y-4">
-      {/* TOPO CONTROLES */}
       <div className="flex justify-between items-center print:hidden">
-        <h2 className="text-xl font-bold uppercase">
-          Planner Mensal de Atendimentos
-        </h2>
-
+        <h2 className="text-xl font-bold uppercase">Planner Mensal de Atendimentos</h2>
         <button
           onClick={() => window.print()}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
@@ -198,7 +212,6 @@ export default function Planner() {
         </button>
       </div>
 
-      {/* FILTROS */}
       <div className="flex gap-4 print:hidden">
         <input
           type="month"
@@ -206,7 +219,6 @@ export default function Planner() {
           onChange={(e) => setMes(e.target.value)}
           className="border p-2 rounded"
         />
-
         <select
           value={paciente}
           onChange={(e) => setPaciente(e.target.value)}
@@ -219,20 +231,16 @@ export default function Planner() {
         </select>
       </div>
 
-      {/* CABEÇALHO IMPRESSÃO */}
       <div className="hidden print:flex justify-between items-center mb-2">
-        <img src="/logo-esquerda.png" alt="Logo esquerda" style={{ height: 60 }} />
-
+        <img src="/logo-esquerda.png" alt="Logo esquerda" style={{ height: 60, width: "auto" }} />
         <div className="text-center">
           <h1 className="font-bold uppercase text-sm">Planner Mensal</h1>
           <p className="text-xs"><strong>Nome:</strong> {paciente}</p>
           <p className="text-xs"><strong>Mês:</strong> {mesExtenso(mes)}</p>
         </div>
-
-        <img src="/logo-direita.png" alt="Logo direita" style={{ height: 60 }} />
+        <img src="/logo-direita.png" alt="Logo direita" style={{ height: 60, width: "auto" }} />
       </div>
 
-      {/* GRADE DO PLANNER */}
       <div className="grid grid-cols-5 border border-black text-[10px]">
         {["Seg", "Ter", "Qua", "Qui", "Sex"].map((d) => (
           <div key={d} className="p-1 font-bold text-center bg-gray-100 border border-black uppercase">
@@ -242,18 +250,12 @@ export default function Planner() {
 
         {calendario.flat().map((dia, i) => {
           const bloqueado = Boolean(dia.treinamento);
-
           return (
             <div
               key={i}
-              className={`relative border border-black p-1 min-h-[90px] ${
-                bloqueado ? "bg-gray-200" : "bg-white"
-              }`}
+              className={`relative border border-black p-1 min-h-[90px] ${bloqueado ? "bg-gray-200" : "bg-white"}`}
             >
-              <div className="font-bold mb-1 text-black">
-                {formatarDataBR(dia.dataISO)}
-              </div>
-
+              <div className="font-bold mb-1 text-black">{formatarDataBR(dia.dataISO)}</div>
               {bloqueado && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="rotate-[-30deg] text-gray-600 font-extrabold text-[18px] opacity-40 text-center px-2">
@@ -261,20 +263,16 @@ export default function Planner() {
                   </div>
                 </div>
               )}
-
-              {!bloqueado &&
-                paciente &&
-                dia.atendimentos.map((a, k) => (
-                  <div key={k} className="text-black">
-                    <strong>{a.hora}</strong> – {a.profissao}
-                  </div>
-                ))}
+              {!bloqueado && paciente && dia.atendimentos.map((a, k) => (
+                <div key={k} className="text-black">
+                  <strong>{a.hora}</strong> – {a.profissao}
+                </div>
+              ))}
             </div>
           );
         })}
       </div>
 
-      {/* RODAPÉ IMPRESSÃO */}
       <div className="hidden print:block text-[10px] mt-6 pt-2">
         <p><strong>Telefone:</strong> 3289-8213</p>
         <p><strong>WhatsApp Administrativo:</strong> (51) 99194-1007 – Agendamentos, receitas e laudos</p>
